@@ -1,0 +1,15 @@
+{
+  "name": "amne_challenge",
+  "version": "1.0.0",
+  "description": "Coding Challenge for AMNE",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Alex1100 <alex100.software@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "split": "^1.0.1",
+    "underscore": "^1.8.3"
+  }
+}
