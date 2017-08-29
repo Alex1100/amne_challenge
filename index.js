@@ -29,7 +29,7 @@ if(!process.argv[3] && fs.existsSync('./output.txt')) {
 
 
 function execute(){
-  let dataSize, windowSize;
+  let dataSize, rangeSize;
   let chunkCount= 0;
   let writeCount = 0;
   let el = [];
@@ -41,7 +41,7 @@ function execute(){
         dataSize = Number(value);
         break;
       case 1:
-        windowSize = findRangeSize(value).windowSize;
+        rangeSize = findRangeSize(value).rangeSize;
         firstDataValue = findRangeSize(value).firstDataValue;
         if (firstDataValue){
           chunkCount++;
@@ -50,7 +50,7 @@ function execute(){
         break;
       default:
         el.push(Number(value));
-        if(el.length >= windowSize){
+        if(el.length >= rangeSize){
           let windowCount = findCountForRange(chunkCount - 2);
           fs.write(notarize, windowCount + '\n', err => {
             if (err) throw err;
@@ -63,18 +63,18 @@ function execute(){
 
   function findRangeSize(value){
     if(value.search(/\n/g) > -1){
-      let pointsArray = value.split('\n').map(Number);
-      return {windowSize: pointsArray[0], firstDataValue: pointsArray[1]};
+      let valuesArray = value.split('\n').map(Number);
+      return {rangeSize: valuesArray[0], firstDataValue: valuesArray[1]};
     } else {
-      return {windowSize: Number(value), firstDataValue: null};
+      return {rangeSize: Number(value), firstDataValue: null};
     }
   }
 
   readStream.on('end', () => {
     if(chunkCount - 2 !== dataSize){
-      console.log(`The give data size parameter ''${dataSize}'' did not match the number of data points processed '${chunkCount - 2}'.  Please check the input data.  The processed data can be found in ${outputFile}`);
+      console.log(`The give data size parameter ''${dataSize}'' did not match the number of data values processed '${chunkCount - 2}'.  Please check the input data.  The processed data can be found in ${outputFile}`);
     } else {
-      console.log(`Success!  The processed data can be found in ${outputFile} A total of ${writeCount} points were written.`);
+      console.log(`Success!  The processed data can be found in ${outputFile} A total of ${writeCount} values were written.`);
     }
   });
 
@@ -83,7 +83,7 @@ function execute(){
     runner: 0,
     runnerType: null,
     multipleRun: null,
-    points: [],
+    values: [],
   };
 
   function findCountForRange(index){
@@ -114,23 +114,23 @@ function execute(){
   }
 
   function calculateNextCount(index){
-    let valueToSubtract = tracker.points[index - windowSize];
+    let valueToSubtract = tracker.values[index - rangeSize];
     tracker.runner -= valueToSubtract;
     let type = determineType(el[index], el[index - 1]);
     updateTracker(tracker, type, index - 1);
     return tracker.runner;
   }
 
-  function updateTracker(tracker, type, windowIndex){
+  function updateTracker(tracker, type, rangeIndex){
     if(tracker.runnerType === type){
-      tracker.multipleRun = tracker.multipleRun + 1 === windowSize ? tracker.multipleRun : tracker.multipleRun + 1;
+      tracker.multipleRun = tracker.multipleRun + 1 === rangeSize ? tracker.multipleRun : tracker.multipleRun + 1;
       tracker.runner += type * tracker.multipleRun;
-      tracker.points[windowIndex] = 0;
-      updateContributionArray(windowIndex, tracker.multipleRun, type);
+      tracker.values[rangeIndex] = 0;
+      updateContributionArray(rangeIndex, tracker.multipleRun, type);
     } else {
       tracker.multipleRun = 1;
       tracker.runnerType = type;
-      tracker.points[windowIndex] = type;
+      tracker.values[rangeIndex] = type;
       tracker.runner += type;
     }
   }
@@ -139,9 +139,9 @@ function execute(){
     let leftmostIndexToUpdate = index - consecutiveCount;
     for(let i = index; i > leftmostIndexToUpdate; i--){
       if(type === 1){
-        tracker.points[i]++;
+        tracker.values[i]++;
       } else if(type === -1){
-        tracker.points[i]--;
+        tracker.values[i]--;
       }
     }
   };
